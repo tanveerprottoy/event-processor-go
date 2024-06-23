@@ -1,0 +1,45 @@
+package response
+
+import (
+	"encoding/json"
+	"github.com/tanveerprottoy/event-processor-go/pkg/constant"
+	"net/http"
+)
+
+type Response[T any] struct {
+	Data T `json:"data"`
+}
+
+type Error struct {
+	Name    string `json:"name"`
+	Message string `json:"message"`
+}
+
+type ErrorResponse struct {
+	StatusCode int `json:"statusCode"`
+	Errors     any `json:"errors"`
+}
+
+func BuildData[T any](code int, payload T) Response[T] {
+	return Response[T]{Data: payload}
+}
+
+func RespondError(code int, payload any, w http.ResponseWriter) (int, error) {
+	w.WriteHeader(code)
+	res, errs := json.Marshal(payload)
+	if errs != nil {
+		// log failed to marshal
+		return w.Write([]byte(constant.InternalServerError))
+	}
+	return w.Write(res)
+}
+
+func Respond(code int, payload any, w http.ResponseWriter) (int, error) {
+	res, err := json.Marshal(payload)
+	if err != nil {
+		RespondError(http.StatusInternalServerError, ErrorResponse{StatusCode: http.StatusInternalServerError, Errors: []any{"an error occured"}}, w)
+		return -1, err
+	}
+	w.WriteHeader(code)
+	return w.Write(res)
+}
