@@ -1,7 +1,8 @@
 package file
 
 type UploadDTO struct {
-	Name string `json:"name" validate:"required"`
+	Name string
+	File 
 }
 
 type ResponseDTO struct {

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/tanveerprottoy/event-processor-go/internal/api/file"
+	"github.com/tanveerprottoy/event-processor-go/pkg/constant"
 	"github.com/tanveerprottoy/event-processor-go/pkg/response"
 )
 
@@ -18,12 +19,13 @@ func NewFile(u file.UseCase) *File {
 }
 
 func (h *File) Upload(w http.ResponseWriter, r *http.Request) {
-	/* ctx := r.Context()
-	r.Body = http.MaxBytesReader(w, r.Body, MAX_UPLOAD_SIZE)
-	if err := r.ParseMultipartForm(MAX_UPLOAD_SIZE); err != nil {
-		http.Error(w, "The uploaded file is too big. Please choose an file that's less than 1MB in size", http.StatusBadRequest)
+	ctx := r.Context()
+	r.Body = http.MaxBytesReader(w, r.Body, constant.MaxFileSize)
+	if err := r.ParseMultipartForm(constant.MaxFileSize); err != nil {
+		http.Error(w, "The file is too large. The file must be less than 4MB in size", http.StatusBadRequest)
 		return
-	}*/
+	}
+	// read file to determine mime
 	buff := make([]byte, 512)
 	_, err := file.Read(buff)
 	if err != nil {

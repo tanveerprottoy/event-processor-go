@@ -27,3 +27,5 @@ var AllowCredentials = false
 
 const InternalServerError = "internal server error"
 const BadRequest = "bad request"
+
+const MaxFileSize = (1024 * 1024) * 4  // 4MB
