@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/tanveerprottoy/event-processor-go/internal/api/file"
+	"github.com/tanveerprottoy/event-processor-go/pkg/response"
 )
 
 // File handles incoming requests
@@ -22,21 +23,21 @@ func (h *File) Upload(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(MAX_UPLOAD_SIZE); err != nil {
 		http.Error(w, "The uploaded file is too big. Please choose an file that's less than 1MB in size", http.StatusBadRequest)
 		return
-	}
+	}*/
 	buff := make([]byte, 512)
-	_, err = file.Read(buff)
+	_, err := file.Read(buff)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}
+	} 
 
 	filetype := http.DetectContentType(buff)
-	if filetype != "image/jpeg" && filetype != "image/png" { {
+	if filetype != "image/jpeg" && filetype != "image/png" {
 		http.Error(w, "The provided file format is not allowed. Please upload a JPEG or PNG image", http.StatusBadRequest)
 		return
 	}
 
-	_, err := file.Seek(0, io.SeekStart)
+	/* _, err := file.Seek(0, io.SeekStart)
 	var v activitytype.CreateDTO
 	// validate the request body
 	err = httpext.ParseRequestBody(r.Body, &v)
@@ -57,6 +58,6 @@ func (h *File) Upload(w http.ResponseWriter, r *http.Request) {
 	if httpErr.Err != nil {
 		response.RespondError(httpErr.Code, response.BuildError(httpErr.Code, httpErr.Err), w)
 		return
-	}
-	response.Respond(http.StatusCreated, response.BuildData(http.StatusCreated, d), w) */
+	} */
+	response.Respond(http.StatusCreated, response.BuildData(http.StatusCreated, d), w)
 }

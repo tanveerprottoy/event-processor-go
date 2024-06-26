@@ -6,8 +6,8 @@ import (
 	"github.com/tanveerprottoy/event-processor-go/internal/api/delivery/http/handler"
 )
 
-func File(basePattern string, handler *handler.File) http.Handler {
+func File(handler *handler.File) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.HandleFunc("POST "+basePattern+"/upload", handler.Upload)
+		http.HandleFunc("/files/upload", handler.Upload)
 	})
 }

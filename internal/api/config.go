@@ -5,8 +5,8 @@ import (
 	"github.com/tanveerprottoy/event-processor-go/internal/api/delivery/http/route"
 	filecfg "github.com/tanveerprottoy/event-processor-go/internal/api/file/config"
 	"github.com/tanveerprottoy/event-processor-go/pkg/constant"
-	"github.com/tanveerprottoy/event-processor-go/pkg/router"
 	"github.com/tanveerprottoy/event-processor-go/pkg/env"
+	"github.com/tanveerprottoy/event-processor-go/pkg/router"
 )
 
 type Config struct {
@@ -32,7 +32,7 @@ func (c *Config) initRouter() {
 }
 
 func (c *Config) initRoutes(args ...any) {
-	route.File(constant.ApiPattern+"/v1", args[0].(*handler.File))
+	c.router.Mux.HandleFunc("POST "+constant.ApiPattern+"/v1", route.File(args[0].(*handler.File)))
 }
 
 // initComponents initializes application components
