@@ -2,7 +2,7 @@ package file
 
 type UploadDTO struct {
 	Name string
-	File 
+	File mu
 }
 
 type ResponseDTO struct {

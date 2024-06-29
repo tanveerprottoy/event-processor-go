@@ -1,6 +1,7 @@
 package file
 
 import (
+	"context"
 	"errors"
 	"io"
 	"mime"
@@ -65,14 +66,8 @@ func CreateDirIfNotExists(path string) error {
 	}
 }
 
-// ReadFile reads a file from the root directory
-func ReadFile(name string) ([]byte, error) {
-	return os.ReadFile(name)
-}
-
 // SaveFile saves a file to the root directory
-func SaveFile(multipartFile multipart.File, dirName string, fileName string) (string, error) {
-	path := filepath.Join(".", dirName)
+func SaveFile(ctx context.Context, multipartFile multipart.File, path string, fileName string) (string, error) {
 	_ = os.MkdirAll(path, os.ModePerm)
 	fullPath := path + "/" + fileName
 	file, err := os.OpenFile(fullPath, os.O_WRONLY|os.O_CREATE, os.ModePerm)
@@ -88,36 +83,53 @@ func SaveFile(multipartFile multipart.File, dirName string, fileName string) (st
 	return fullPath, nil
 }
 
-func t() {
-	path := filepath.Join(".", "files")
-	_ = os.MkdirAll(path, os.ModePerm)
-	fullPath := path + "/" + n + filepath.Ext(h.Filename)
-	file, err := os.OpenFile(fullPath, os.O_WRONLY|os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return ""
-	}
-	defer file.Close()
-	// Copy the file to the destination path
-	_, err = io.Copy(file, f)
-	if err != nil {
-		return ""
-	}
-	return fullPath
-}
-
 // GetFileContentType returns the content type of the file
-func GetFileContentType(file *os.File) (string, error) {
+func GetFileContentType(file *os.File, seekToStart bool) (string, error) {
 	// to sniff the content type only the first
 	// 512 bytes are used.
-	buf := make([]byte, 512)
+	buff := make([]byte, 512)
 
-	_, err := file.Read(buf)
+	_, err := file.Read(buff)
 
 	if err != nil {
 		return "", err
 	}
 
-	contentType := http.DetectContentType(buf)
+	contentType := http.DetectContentType(buff)
+
+	if seekToStart {
+		_, err := file.Seek(0, io.SeekStart)
+		if err != nil {
+			// return contentType alongside error
+			// as it is expected to be detected
+			return contentType, err
+		}
+	}
+
+	return contentType, nil
+}
+
+func GetMultipartFileContentType(file multipart.File, seekToStart bool) (string, error) {
+	// to sniff the content type only the first
+	// 512 bytes are used.
+	buff := make([]byte, 512)
+
+	_, err := file.Read(buff)
+
+	if err != nil {
+		return "", err
+	}
+
+	contentType := http.DetectContentType(buff)
+
+	if seekToStart {
+		_, err := file.Seek(0, io.SeekStart)
+		if err != nil {
+			// return contentType alongside error
+			// as it is expected to be detected
+			return contentType, err
+		}
+	}
 
 	return contentType, nil
 }

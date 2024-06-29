@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/tanveerprottoy/event-processor-go/internal/api/file"
 	"github.com/tanveerprottoy/event-processor-go/pkg/constant"
+	filepkg "github.com/tanveerprottoy/event-processor-go/pkg/file"
+	"github.com/tanveerprottoy/event-processor-go/pkg/httpext"
 	"github.com/tanveerprottoy/event-processor-go/pkg/response"
 )
 
@@ -20,46 +23,23 @@ func NewFile(u file.UseCase) *File {
 
 func (h *File) Upload(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+		// http.MaxBytesReader limits the request body size
 	r.Body = http.MaxBytesReader(w, r.Body, constant.MaxFileSize)
-	if err := r.ParseMultipartForm(constant.MaxFileSize); err != nil {
-		http.Error(w, "The file is too large. The file must be less than 4MB in size", http.StatusBadRequest)
-		return
-	}
-	// read file to determine mime
-	buff := make([]byte, 512)
-	_, err := file.Read(buff)
+	f, head, err := httpext.GetFile(r, constant.MaxFileSize)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	} 
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	defer f.Close()
 
-	filetype := http.DetectContentType(buff)
-	if filetype != "image/jpeg" && filetype != "image/png" {
-		http.Error(w, "The provided file format is not allowed. Please upload a JPEG or PNG image", http.StatusBadRequest)
-		return
+	// get content/MIME type
+	contentType, err := filepkg.GetMultipartFileContentType(f, true)
+	log.Println(contentType)
+	// check mime type
+	/* validMIME := filepkg.IsAllowedMIMEType(head.Filename, constant.AllowedMimeTypes[:])
+	if !validMIME {
+		return dto, errorext.HTTPError{Code: http.StatusBadRequest, Err: errors.New(constant.UnsupportedFileType)}
 	}
 
-	/* _, err := file.Seek(0, io.SeekStart)
-	var v activitytype.CreateDTO
-	// validate the request body
-	err = httpext.ParseRequestBody(r.Body, &v)
-	if err != nil {
-		response.RespondError(http.StatusBadRequest, response.BuildError(http.StatusBadRequest, err), w)
-		return
-	}
-	if companyID != "" {
-		v.CompanyID = companyID
-	}
-	// validate the request body
-	validationErrs := h.validater.Validate(&v)
-	if validationErrs != nil {
-		response.RespondError(http.StatusBadRequest, response.BuildError(http.StatusBadRequest, validationErrs), w)
-		return
-	}
-	d, httpErr := h.useCase.Upload(ctx, v)
-	if httpErr.Err != nil {
-		response.RespondError(httpErr.Code, response.BuildError(httpErr.Code, httpErr.Err), w)
-		return
-	} */
+	_, err := file.Seek(0, io.SeekStart) */
 	response.Respond(http.StatusCreated, response.BuildData(http.StatusCreated, d), w)
 }

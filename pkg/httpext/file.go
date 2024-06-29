@@ -1,27 +1,29 @@
 package httpext
 
 import (
-	"io"
+	"errors"
+	"mime/multipart"
 	"net/http"
-	"os"
-	"path/filepath"
 )
 
-// GetFile fetches the file
-func GetFile(r *http.Request) string {
-	// left shift 32 << 20 which results in 32*2^20 = 33554432
-	// x << y, results in x*2^y
-	// max allowed value is 32MB
-	err := r.ParseMultipartForm(32 << 20)
-	if err != nil {
-		return ""
+func ParseMultiPartForm(r *http.Request, maxMemory int64) error {
+	if maxMemory == 0 {
+		// left shift 32 << 20 which results in 32*2^20 = 33554432
+		// x << y, results in x*2^y
+		// max allowed value is 32MB
+		maxMemory = 32 << 20
 	}
-	n := r.Form.Get("name")
-	// Retrieve the file from form data
-	f, h, err := r.FormFile("file")
-	if err != nil {
-		return ""
+	return r.ParseMultipartForm(maxMemory)
+}
+
+func GetFile(r *http.Request, maxFileSize int64) (multipart.File, *multipart.FileHeader, error) {
+	if err := ParseMultiPartForm(r, maxFileSize); err != nil {
+		return nil, nil, errors.New("the file is too large. the file must be less than 4MB in size")
 	}
-	defer f.Close()
-	
+	// get file
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		return nil, nil, err
+	}
+	return file, header, nil
 }
