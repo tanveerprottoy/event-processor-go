@@ -4,35 +4,36 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/tanveerprottoy/event-processor-go/internal/api/file"
+	fileapi "github.com/tanveerprottoy/event-processor-go/internal/api/file"
 	"github.com/tanveerprottoy/event-processor-go/pkg/constant"
-	filepkg "github.com/tanveerprottoy/event-processor-go/pkg/file"
+	"github.com/tanveerprottoy/event-processor-go/pkg/file"
 	"github.com/tanveerprottoy/event-processor-go/pkg/httpext"
 	"github.com/tanveerprottoy/event-processor-go/pkg/response"
 )
 
 // File handles incoming requests
 type File struct {
-	useCase file.UseCase
+	useCase fileapi.UseCase
 }
 
 // NewFile initializes a new Handler
-func NewFile(u file.UseCase) *File {
+func NewFile(u fileapi.UseCase) *File {
 	return &File{useCase: u}
 }
 
 func (h *File) Upload(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-		// http.MaxBytesReader limits the request body size
+	// ctx := r.Context()
+	// http.MaxBytesReader limits the request body size
 	r.Body = http.MaxBytesReader(w, r.Body, constant.MaxFileSize)
 	f, head, err := httpext.GetFile(r, constant.MaxFileSize)
+	log.Panicln(head)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	defer f.Close()
 
 	// get content/MIME type
-	contentType, err := filepkg.GetMultipartFileContentType(f, true)
+	contentType, err := file.GetMultipartFileContentType(f, true)
 	log.Println(contentType)
 	// check mime type
 	/* validMIME := filepkg.IsAllowedMIMEType(head.Filename, constant.AllowedMimeTypes[:])
@@ -41,5 +42,5 @@ func (h *File) Upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := file.Seek(0, io.SeekStart) */
-	response.Respond(http.StatusCreated, response.BuildData(http.StatusCreated, d), w)
+	response.Respond(http.StatusCreated, response.BuildData(http.StatusCreated, ""), w)
 }

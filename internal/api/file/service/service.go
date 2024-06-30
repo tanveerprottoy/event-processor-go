@@ -20,3 +20,8 @@ func NewService() *Service {
 func (s *Service) Upload(ctx context.Context, d file.UploadDTO, args ...any) (file.ResponseDTO, error) {
 	return file.ResponseDTO{}, nil
 }
+
+func (s *Service) MultiUpload(ctx context.Context, d file.UploadDTO, args ...any) (file.ResponseDTO, error) {
+	return file.ResponseDTO{}, nil
+}
+
