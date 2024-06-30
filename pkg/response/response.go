@@ -20,7 +20,7 @@ type ErrorResponse struct {
 	Errors     any `json:"errors"`
 }
 
-func BuildData[T any](code int, payload T) Response[T] {
+func BuildData[T any](payload T) Response[T] {
 	return Response[T]{Data: payload}
 }
 
@@ -34,7 +34,7 @@ func RespondError(code int, payload any, w http.ResponseWriter) (int, error) {
 	return w.Write(res)
 }
 
-func Respond(code int, payload any, w http.ResponseWriter) (int, error) {
+func Respond(w http.ResponseWriter, code int, payload any) (int, error) {
 	res, err := json.Marshal(payload)
 	if err != nil {
 		RespondError(http.StatusInternalServerError, ErrorResponse{StatusCode: http.StatusInternalServerError, Errors: []any{"an error occured"}}, w)

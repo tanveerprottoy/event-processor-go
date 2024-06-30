@@ -6,7 +6,7 @@ import (
 
 	fileapi "github.com/tanveerprottoy/event-processor-go/internal/api/file"
 	"github.com/tanveerprottoy/event-processor-go/pkg/constant"
-	"github.com/tanveerprottoy/event-processor-go/pkg/file"
+	"github.com/tanveerprottoy/event-processor-go/pkg/errorext"
 	"github.com/tanveerprottoy/event-processor-go/pkg/httpext"
 	"github.com/tanveerprottoy/event-processor-go/pkg/response"
 )
@@ -22,25 +22,30 @@ func NewFile(u fileapi.UseCase) *File {
 }
 
 func (h *File) Upload(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
+	log.Println("handler.File.Upload")
+	ctx := r.Context()
 	// http.MaxBytesReader limits the request body size
 	r.Body = http.MaxBytesReader(w, r.Body, constant.MaxFileSize)
-	f, head, err := httpext.GetFile(r, constant.MaxFileSize)
-	log.Panicln(head)
+	f, header, err := httpext.GetFile(r, constant.MaxFileSize)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
+
 	defer f.Close()
 
-	// get content/MIME type
-	contentType, err := file.GetMultipartFileContentType(f, true)
-	log.Println(contentType)
-	// check mime type
-	/* validMIME := filepkg.IsAllowedMIMEType(head.Filename, constant.AllowedMimeTypes[:])
-	if !validMIME {
-		return dto, errorext.HTTPError{Code: http.StatusBadRequest, Err: errors.New(constant.UnsupportedFileType)}
+	log.Printf("Size: %d, Name: %s", header.Size, header.Filename)
+
+	dto := fileapi.UploadDTO{
+		File:   f,
+		Header: header,
 	}
 
-	_, err := file.Seek(0, io.SeekStart) */
-	response.Respond(http.StatusCreated, response.BuildData(http.StatusCreated, ""), w)
+	res, err := h.useCase.Upload(ctx, dto)
+
+	if err != nil {
+		err := errorext.ParseCustomError(err)
+		http.Error(w, err.Error(), err.Code())
+	}
+
+	response.Respond(w, http.StatusOK, response.BuildData(res))
 }

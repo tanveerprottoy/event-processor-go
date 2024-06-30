@@ -1,10 +1,12 @@
 package file
 
+import "mime/multipart"
+
 type UploadDTO struct {
-	Name string
-	// File mu
+	File   multipart.File
+	Header *multipart.FileHeader
 }
 
 type ResponseDTO struct {
-	Success bool `json:"success"`
+	FilePath string `json:"filePath"`
 }

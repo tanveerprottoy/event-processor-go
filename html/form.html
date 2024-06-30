@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Upload files</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <h3>Single file</h3>
+    <form id="form" enctype="multipart/form-data" action="/api/v1/files/upload" method="POST">
+        <input type="file" name="name"><br><br>
+        <br>
+        <input type="submit" value="Submit">
+    </form>
+
+    <!-- <h3>Multiple files</h3>
+    <form id="form" enctype="multipart/form-data" action="/api/v1/files/upload-multi" method="POST">
+        <input type="file" name="name" multiple="multiple"><br><br>
+        <br>
+        <input type="submit" value="Submit">
+    </form> -->
+</body>
+
+</html>

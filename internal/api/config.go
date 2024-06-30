@@ -32,13 +32,19 @@ func (c *Config) initRouter() {
 }
 
 func (c *Config) initRoutes(args ...any) {
-	c.router.Mux.HandleFunc("POST "+constant.ApiPattern+"/v1", route.File(args[0].(*handler.File)))
+	// static routes
+	route.Static(c.router.Mux, constant.ApiPattern+"/v1/static", args[0].(*handler.Static))
+
+	//file routes
+	route.File(c.router.Mux, constant.ApiPattern+"/v1/files", args[1].(*handler.File))
 }
 
 // initComponents initializes application components
 func (c *Config) initComponents() {
 	file := filecfg.NewConfig()
+
 	c.initRoutes(
+		handler.NewStatic(),
 		handler.NewFile(file.UseCase),
 	)
 }

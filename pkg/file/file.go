@@ -146,8 +146,7 @@ func GetMIMEType(fileName string) string {
 }
 
 // IsAllowedMIMEType checks if the file is of an allowed mime type
-func IsAllowedMIMEType(fileName string, allowedMimeTypes []string) bool {
-	mimeType := GetMIMEType(fileName)
+func IsAllowedMIMEType(mimeType string, allowedMimeTypes []string) bool {
 	for _, allowedType := range allowedMimeTypes {
 		if strings.HasPrefix(mimeType, allowedType) {
 			return true

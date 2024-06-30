@@ -18,7 +18,7 @@ func ParseMultiPartForm(r *http.Request, maxMemory int64) error {
 
 func GetFile(r *http.Request, maxFileSize int64) (multipart.File, *multipart.FileHeader, error) {
 	if err := ParseMultiPartForm(r, maxFileSize); err != nil {
-		return nil, nil, errors.New("the file is too large. the file must be less than 4MB in size")
+		return nil, nil, errors.New("the file is too large. the file must be less than 10MB in size")
 	}
 	// get file
 	file, header, err := r.FormFile("file")
