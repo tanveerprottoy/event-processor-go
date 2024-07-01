@@ -8,4 +8,6 @@ import (
 
 type UseCase interface {
 	Upload(ctx context.Context, d UploadDTO, args ...any) (response.Response[ResponseDTO], error)
+	
+	MultipleUpload(ctx context.Context, d UploadDTO, args ...any) (response.Response[ResponseDTO], error)
 }

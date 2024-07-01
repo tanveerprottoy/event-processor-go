@@ -27,3 +27,21 @@ func GetFile(r *http.Request, maxFileSize int64) (multipart.File, *multipart.Fil
 	}
 	return file, header, nil
 }
+
+func GetFiles(r *http.Request, maxFileSize int64) ([]struct{file multipart.File, header multipart.FileHeader}{}, error) {
+	// get file headers
+	headers := r.MultipartForm.File["files"]
+	if len(headers) == 0 {
+		return nil, nil, errors.New("no files found")
+	}
+	for _, header := range headers {
+		if header.Size > maxFileSize {
+			return nil, nil, errors.New("the file is too large. the file must be less than 10MB in size")
+		}
+		file, err := header.Open()
+		if err != nil {
+			return nil, nil, err
+		}
+
+	}
+}

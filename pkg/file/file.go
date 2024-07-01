@@ -68,7 +68,10 @@ func CreateDirIfNotExists(path string) error {
 
 // SaveFile saves a file to the root directory
 func SaveFile(ctx context.Context, multipartFile multipart.File, path string, fileName string) (string, error) {
-	_ = os.MkdirAll(path, os.ModePerm)
+	err := os.MkdirAll(filepath.Join("./", path), os.ModePerm)
+	if err != nil {
+		return "", err
+	}
 	fullPath := path + "/" + fileName
 	file, err := os.OpenFile(fullPath, os.O_WRONLY|os.O_CREATE, os.ModePerm)
 	if err != nil {
