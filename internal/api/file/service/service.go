@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"path/filepath"
 
 	fileapi "github.com/tanveerprottoy/event-processor-go/internal/api/file"
@@ -25,8 +27,13 @@ func NewService() *Service {
 }
 
 func (s *Service) Upload(ctx context.Context, d fileapi.UploadDTO, args ...any) (response.Response[fileapi.ResponseDTO], error) {
+	f, header, err := d.Req.FormFile("file")
+	if err != nil {
+		return response.Response[fileapi.ResponseDTO]{}, errorext.NewCustomError(http.StatusBadRequest, errors.New("could not retrieve the file"))
+	}
+	defer f.Close()
 	// get content/MIME type
-	contentType, err := file.GetMultipartFileContentType(d.File, true)
+	contentType, err := file.GetMultipartFileContentType(f, true)
 	if err != nil {
 		return response.Response[fileapi.ResponseDTO]{}, errorext.BuildCustomError(err)
 	}
@@ -37,7 +44,7 @@ func (s *Service) Upload(ctx context.Context, d fileapi.UploadDTO, args ...any) 
 		return response.Response[fileapi.ResponseDTO]{}, errorext.BuildCustomError(err)
 	}
 	// proceed to save the file
-	p, err := file.SaveFile(ctx, d.File, "uploads", fmt.Sprintf("%d", timeext.NowUnixMilli())+filepath.Ext(d.Header.Filename))
+	p, err := file.SaveFile(ctx, f, "uploads", fmt.Sprintf("%d", timeext.NowUnixMilli())+filepath.Ext(header.Filename))
 	if err != nil {
 		return response.Response[fileapi.ResponseDTO]{}, errorext.BuildCustomError(err)
 	}
@@ -45,5 +52,20 @@ func (s *Service) Upload(ctx context.Context, d fileapi.UploadDTO, args ...any) 
 }
 
 func (s *Service) MultipleUpload(ctx context.Context, d fileapi.UploadDTO, args ...any) (response.Response[fileapi.ResponseDTO], error) {
+	headers := d.Req.MultipartForm.File["files"]
+	if len(headers) == 0 {
+		return response.Response[fileapi.ResponseDTO]{}, errorext.NewCustomError(http.StatusBadRequest, errors.New("could not retrieve the files"))
+	}
+	for _, header := range headers {
+		if header.Size > constant.MaxFileSize {
+			return response.Response[fileapi.ResponseDTO]{}, errorext.NewCustomError(http.StatusBadRequest, errors.New("the file is too large. the file must be less than 10MB in size"))
+		}
+		file, err := header.Open()
+		if err != nil {
+			return response.Response[fileapi.ResponseDTO]{}, err
+		}
+		defer file.Close()
+		// process file
+	}
 	return response.Response[fileapi.ResponseDTO]{}, nil
 }

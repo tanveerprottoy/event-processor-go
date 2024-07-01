@@ -1,10 +1,12 @@
 package file
 
-import "mime/multipart"
+import (
+	"net/http"
+)
 
 type UploadDTO struct {
-	File   multipart.File
-	Header *multipart.FileHeader
+	// pass the request
+	Req *http.Request
 }
 
 type ResponseDTO struct {

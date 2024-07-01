@@ -26,21 +26,11 @@ func (h *File) Upload(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	// http.MaxBytesReader limits the request body size
 	r.Body = http.MaxBytesReader(w, r.Body, constant.MaxFileSize)
-	f, header, err := httpext.GetFile(r, constant.MaxFileSize)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err := httpext.ParseMultiPartForm(r, constant.MaxFileSize); err != nil {
+		http.Error(w, "the file is too large. the file must be less than 10MB in size", http.StatusBadRequest)
 	}
 
-	defer f.Close()
-
-	log.Printf("Size: %d, Name: %s", header.Size, header.Filename)
-
-	dto := fileapi.UploadDTO{
-		File:   f,
-		Header: header,
-	}
-
-	res, err := h.useCase.Upload(ctx, dto)
+	res, err := h.useCase.Upload(ctx, fileapi.UploadDTO{Req: r})
 
 	if err != nil {
 		err := errorext.ParseCustomError(err)
@@ -52,23 +42,10 @@ func (h *File) Upload(w http.ResponseWriter, r *http.Request) {
 
 func (h *File) MultipleUpload(w http.ResponseWriter, r *http.Request) {
 	log.Println("handler.File.MultipleUpload")
-	ctx := r.Context()
-	// go for max allowed size
-	if err := httpext.ParseMultiPartForm(r, 32<<20); err != nil {
-		http.Error(w, "the file is too large. the file must be less than 10MB in size", http.StatusBadRequest)
+	// ctx := r.Context()
+	if err := httpext.ParseMultiPartForm(r, constant.MaxMemoryBytes); err != nil {
+		http.Error(w, "payload too large", http.StatusBadRequest)
 	}
 
-	dto := fileapi.UploadDTO{
-		File:   f,
-		Header: header,
-	}
-
-	/* res, err := h.useCase.Upload(ctx, dto)
-
-	if err != nil {
-		err := errorext.ParseCustomError(err)
-		http.Error(w, err.Error(), err.Code())
-	} */
-
-	// response.Respond(w, http.StatusOK, response.BuildData(res))
+	response.Respond(w, http.StatusOK, response.BuildData("success"))
 }

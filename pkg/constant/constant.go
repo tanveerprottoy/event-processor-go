@@ -30,3 +30,6 @@ const BadRequest = "bad request"
 const UnsupportedFileType = "unsupported file type"
 
 const MaxFileSize = (1024 * 1024) * 10  // 10MB
+
+// around 32MB
+const MaxMemoryBytes = 32 << 20
