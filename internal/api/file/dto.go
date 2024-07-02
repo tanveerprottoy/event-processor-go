@@ -12,3 +12,7 @@ type UploadDTO struct {
 type ResponseDTO struct {
 	FilePath string `json:"filePath"`
 }
+
+type ResponseMultiDTO struct {
+	FilePaths []string `json:"filePaths"`
+}
