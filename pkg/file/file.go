@@ -67,7 +67,9 @@ func CreateDirIfNotExists(path string) error {
 }
 
 // SaveFile saves a file to the root directory
-func SaveFile(ctx context.Context, multipartFile multipart.File, path string, fileName string) (string, error) {
+// an optional writer can be passed, which
+// will be used to pass as io.TeeReader(file, writer)
+func SaveFile(ctx context.Context, multipartFile multipart.File, path string, fileName string, writer io.Writer) (string, error) {
 	err := os.MkdirAll(filepath.Join("./", path), os.ModePerm)
 	if err != nil {
 		return "", err
@@ -78,8 +80,13 @@ func SaveFile(ctx context.Context, multipartFile multipart.File, path string, fi
 		return "", err
 	}
 	defer file.Close()
-	// Copy the file to the destination path
-	_, err = io.Copy(file, multipartFile)
+	if writer != nil {
+		// Copy the file to the destination path
+		_, err = io.Copy(file, io.TeeReader(file, writer))
+	} else {
+		// Copy the file to the destination path
+		_, err = io.Copy(file, multipartFile)
+	}
 	if err != nil {
 		return "", err
 	}

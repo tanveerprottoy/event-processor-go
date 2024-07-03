@@ -44,7 +44,7 @@ func (s *Service) Upload(ctx context.Context, d fileapi.UploadDTO, args ...any) 
 		return response.Response[fileapi.ResponseDTO]{}, errorext.BuildCustomError(err)
 	}
 	// proceed to save the file
-	p, err := file.SaveFile(ctx, f, "uploads", fmt.Sprintf("%d", timeext.NowUnixMilli())+filepath.Ext(header.Filename))
+	p, err := file.SaveFile(ctx, f, "uploads", fmt.Sprintf("%d", timeext.NowUnixMilli())+filepath.Ext(header.Filename), nil)
 	if err != nil {
 		return response.Response[fileapi.ResponseDTO]{}, errorext.BuildCustomError(err)
 	}
@@ -79,7 +79,45 @@ func (s *Service) UploadMultiple(ctx context.Context, d fileapi.UploadDTO, args 
 			return response.Response[fileapi.ResponseMultiDTO]{}, errorext.BuildCustomError(err)
 		}
 		// proceed to save the file
-		p, err := file.SaveFile(ctx, f, "uploads", fmt.Sprintf("%d", timeext.NowUnixMilli())+filepath.Ext(header.Filename))
+		p, err := file.SaveFile(ctx, f, "uploads", fmt.Sprintf("%d", timeext.NowUnixMilli())+filepath.Ext(header.Filename), nil)
+		if err != nil {
+			return response.Response[fileapi.ResponseMultiDTO]{}, errorext.BuildCustomError(err)
+		}
+		paths = append(paths, p)
+	}
+	return response.Response[fileapi.ResponseMultiDTO]{Data: fileapi.ResponseMultiDTO{FilePaths: paths}}, nil
+}
+
+func (s *Service) UploadMultipleOutputProgress(ctx context.Context, d fileapi.UploadDTO, args ...any) (response.Response[fileapi.ResponseMultiDTO], error) {
+	headers := d.Req.MultipartForm.File["files"]
+	if len(headers) == 0 {
+		return response.Response[fileapi.ResponseMultiDTO]{}, errorext.NewCustomError(http.StatusBadRequest, errors.New("could not retrieve the files"))
+	}
+	paths := make([]string, 0)
+	for _, header := range headers {
+		if header.Size > constant.MaxFileSize {
+			return response.Response[fileapi.ResponseMultiDTO]{}, errorext.NewCustomError(http.StatusBadRequest, errors.New("the file is too large. the file must be less than 10MB in size"))
+		}
+		f, err := header.Open()
+		if err != nil {
+			return response.Response[fileapi.ResponseMultiDTO]{}, errorext.NewCustomError(http.StatusBadRequest, errors.New("one of the files cannot be processed"))
+		}
+		defer f.Close()
+		// process file
+		// get content/MIME type
+		contentType, err := file.GetMultipartFileContentType(f, true)
+		if err != nil {
+			return response.Response[fileapi.ResponseMultiDTO]{}, errorext.BuildCustomError(err)
+		}
+		log.Println(contentType)
+		// check mime type
+		validMIME := file.IsAllowedMIMEType(contentType, constant.AllowedMimeTypes[:])
+		if !validMIME {
+			return response.Response[fileapi.ResponseMultiDTO]{}, errorext.BuildCustomError(err)
+		}
+		prog := fileapi.NewProgress(header.Size)
+		// proceed to save the file
+		p, err := file.SaveFile(ctx, f, "uploads", fmt.Sprintf("%d", timeext.NowUnixMilli())+filepath.Ext(header.Filename), prog)
 		if err != nil {
 			return response.Response[fileapi.ResponseMultiDTO]{}, errorext.BuildCustomError(err)
 		}
