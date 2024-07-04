@@ -27,13 +27,8 @@ func NewService() *Service {
 }
 
 func (s *Service) Upload(ctx context.Context, d fileapi.UploadDTO, args ...any) (response.Response[fileapi.ResponseDTO], error) {
-	f, header, err := d.Req.FormFile("file")
-	if err != nil {
-		return response.Response[fileapi.ResponseDTO]{}, errorext.NewCustomError(http.StatusBadRequest, errors.New("could not retrieve the file"))
-	}
-	defer f.Close()
 	// get content/MIME type
-	contentType, err := file.GetMultipartFileContentType(f, true)
+	contentType, err := file.GetMultipartFileContentType(d.File, true)
 	if err != nil {
 		return response.Response[fileapi.ResponseDTO]{}, errorext.BuildCustomError(err)
 	}
@@ -44,20 +39,16 @@ func (s *Service) Upload(ctx context.Context, d fileapi.UploadDTO, args ...any) 
 		return response.Response[fileapi.ResponseDTO]{}, errorext.BuildCustomError(err)
 	}
 	// proceed to save the file
-	p, err := file.SaveFile(ctx, f, "uploads", fmt.Sprintf("%d", timeext.NowUnixMilli())+filepath.Ext(header.Filename), nil)
+	p, err := file.SaveFile(ctx, d.File, "uploads", fmt.Sprintf("%d", timeext.NowUnixMilli())+filepath.Ext(d.Header.Filename), nil)
 	if err != nil {
 		return response.Response[fileapi.ResponseDTO]{}, errorext.BuildCustomError(err)
 	}
 	return response.Response[fileapi.ResponseDTO]{Data: fileapi.ResponseDTO{FilePath: p}}, nil
 }
 
-func (s *Service) UploadMultiple(ctx context.Context, d fileapi.UploadDTO, args ...any) (response.Response[fileapi.ResponseMultiDTO], error) {
-	headers := d.Req.MultipartForm.File["files"]
-	if len(headers) == 0 {
-		return response.Response[fileapi.ResponseMultiDTO]{}, errorext.NewCustomError(http.StatusBadRequest, errors.New("could not retrieve the files"))
-	}
+func (s *Service) UploadMultiple(ctx context.Context, d fileapi.UploadMultipleDTO, args ...any) (response.Response[fileapi.ResponseMultiDTO], error) {
 	paths := make([]string, 0)
-	for _, header := range headers {
+	for _, header := range d.Headers {
 		if header.Size > constant.MaxFileSize {
 			return response.Response[fileapi.ResponseMultiDTO]{}, errorext.NewCustomError(http.StatusBadRequest, errors.New("the file is too large. the file must be less than 10MB in size"))
 		}
@@ -88,13 +79,9 @@ func (s *Service) UploadMultiple(ctx context.Context, d fileapi.UploadDTO, args 
 	return response.Response[fileapi.ResponseMultiDTO]{Data: fileapi.ResponseMultiDTO{FilePaths: paths}}, nil
 }
 
-func (s *Service) UploadMultipleOutputProgress(ctx context.Context, d fileapi.UploadDTO, args ...any) (response.Response[fileapi.ResponseMultiDTO], error) {
-	headers := d.Req.MultipartForm.File["files"]
-	if len(headers) == 0 {
-		return response.Response[fileapi.ResponseMultiDTO]{}, errorext.NewCustomError(http.StatusBadRequest, errors.New("could not retrieve the files"))
-	}
+func (s *Service) UploadMultipleOutputProgress(ctx context.Context, d fileapi.UploadMultipleDTO, args ...any) (response.Response[fileapi.ResponseMultiDTO], error) {
 	paths := make([]string, 0)
-	for _, header := range headers {
+	for _, header := range d.Headers {
 		if header.Size > constant.MaxFileSize {
 			return response.Response[fileapi.ResponseMultiDTO]{}, errorext.NewCustomError(http.StatusBadRequest, errors.New("the file is too large. the file must be less than 10MB in size"))
 		}

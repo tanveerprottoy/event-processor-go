@@ -29,7 +29,20 @@ func (h *File) Upload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "the file is too large. the file must be less than 10MB in size", http.StatusBadRequest)
 	}
 
-	res, err := h.useCase.Upload(r.Context(), fileapi.UploadDTO{Req: r})
+	// get the file
+	f, header, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "could not retrieve the file", http.StatusBadRequest)
+	}
+
+	defer f.Close()
+
+	dto := fileapi.UploadDTO{
+		File:   f,
+		Header: header,
+	}
+
+	res, err := h.useCase.Upload(r.Context(), dto)
 
 	if err != nil {
 		err := errorext.ParseCustomError(err)
@@ -49,10 +62,20 @@ func (h *File) UploadMultiple(w http.ResponseWriter, r *http.Request) {
 	var res response.Response[fileapi.ResponseMultiDTO]
 	param := httpext.GetQueryParam(r, "outputProgress")
 	ctx := r.Context()
+	headers := r.MultipartForm.File["files"]
+
+	if len(headers) == 0 {
+		http.Error(w, "could not retrieve the files", http.StatusBadRequest)
+	}
+
+	dto := fileapi.UploadMultipleDTO{
+		Headers: headers,
+	}
+
 	if param != "" && param == "true" {
-		res, err = h.useCase.UploadMultipleOutputProgress(ctx, fileapi.UploadDTO{Req: r})
+		res, err = h.useCase.UploadMultipleOutputProgress(ctx, dto)
 	} else {
-		res, err = h.useCase.UploadMultiple(ctx, fileapi.UploadDTO{Req: r})
+		res, err = h.useCase.UploadMultiple(ctx, dto)
 	}
 	if err != nil {
 		err := errorext.ParseCustomError(err)
