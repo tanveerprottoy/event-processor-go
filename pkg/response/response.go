@@ -24,7 +24,7 @@ func BuildData[T any](payload T) Response[T] {
 	return Response[T]{Data: payload}
 }
 
-func RespondError(code int, payload any, w http.ResponseWriter) (int, error) {
+func RespondError(w http.ResponseWriter, code int, payload any) (int, error) {
 	w.WriteHeader(code)
 	res, errs := json.Marshal(payload)
 	if errs != nil {
@@ -37,7 +37,7 @@ func RespondError(code int, payload any, w http.ResponseWriter) (int, error) {
 func Respond(w http.ResponseWriter, code int, payload any) (int, error) {
 	res, err := json.Marshal(payload)
 	if err != nil {
-		RespondError(http.StatusInternalServerError, ErrorResponse{StatusCode: http.StatusInternalServerError, Errors: []any{"an error occured"}}, w)
+		RespondError(w, http.StatusInternalServerError, ErrorResponse{StatusCode: http.StatusInternalServerError, Errors: []any{"an error occured"}})
 		return -1, err
 	}
 	w.WriteHeader(code)
