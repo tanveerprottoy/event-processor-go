@@ -29,6 +29,8 @@ func (h *File) Upload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "the file is too large. the file must be less than 10MB in size", http.StatusBadRequest)
 	}
 
+	defer r.Body.Close()
+
 	// get the file
 	f, header, err := r.FormFile("file")
 	if err != nil {
