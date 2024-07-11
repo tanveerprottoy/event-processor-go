@@ -165,27 +165,6 @@ func IsAllowedMIMEType(mimeType string, allowedMimeTypes []string) bool {
 	return false
 }
 
-// IsAudioMIMEType checks if the file is an audio file
-func IsAudioMIMEType(fileName string) bool {
-	ext := filepath.Ext(fileName)
-	mimeType := mime.TypeByExtension(ext)
-	return strings.HasPrefix(mimeType, "audio/")
-}
-
-// IsImageMIMEType checks if the file is an image file
-func IsImageMIMEType(fileName string) bool {
-	ext := filepath.Ext(fileName)
-	mimeType := mime.TypeByExtension(ext)
-	return strings.HasPrefix(mimeType, "image/")
-}
-
-// IsVideoMIMEType checks if the file is a video file
-func IsVideoMIMEType(fileName string) bool {
-	ext := filepath.Ext(fileName)
-	mimeType := mime.TypeByExtension(ext)
-	return strings.HasPrefix(mimeType, "video/")
-}
-
 // IsTargetMIMEType checks if the file is of the target mime type
 func IsTargetMIMEType(fileName string, targetMimeType string) bool {
 	ext := filepath.Ext(fileName)
