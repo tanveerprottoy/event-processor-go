@@ -12,6 +12,7 @@ import (
 	"github.com/tanveerprottoy/event-processor-go/pkg/constant"
 	"github.com/tanveerprottoy/event-processor-go/pkg/errorext"
 	"github.com/tanveerprottoy/event-processor-go/pkg/file"
+	"github.com/tanveerprottoy/event-processor-go/pkg/ioext"
 	"github.com/tanveerprottoy/event-processor-go/pkg/response"
 	"github.com/tanveerprottoy/event-processor-go/pkg/timeext"
 )
@@ -102,7 +103,7 @@ func (s *Service) UploadMultipleOutputProgress(ctx context.Context, d fileapi.Up
 		if !validMIME {
 			return response.Response[fileapi.ResponseMultiDTO]{}, errorext.BuildCustomError(err)
 		}
-		prog := fileapi.NewProgress(header.Size)
+		prog := ioext.NewProgress(header.Size)
 		// proceed to save the file
 		p, err := file.SaveFile(ctx, f, "uploads", fmt.Sprintf("%d", timeext.NowUnixMilli())+filepath.Ext(header.Filename), prog)
 		if err != nil {
