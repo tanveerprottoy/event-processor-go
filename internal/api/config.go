@@ -18,6 +18,7 @@ func NewConfig() *Config {
 	c.loadEnv()
 	c.initRouter()
 	c.initComponents()
+	
 	return c
 }
 

@@ -15,20 +15,16 @@ type App struct {
 // NewApp creates App
 func NewApp() *App {
 	a := &App{cfg: NewConfig()}
+	
 	a.initServer()
 	a.configureGracefulShutdown()
+
 	return a
 }
 
 // initServer initializes the server
 func (a *App) initServer() {
 	a.srv = server.NewServer(":"+os.Getenv("PORT"), a.cfg.router.Mux)
-	/* ReadTimeout:       constant.ServerReadTimeout * time.Second,
-	ReadHeaderTimeout: constant.ServerReadHeaderTimeout * time.Second,
-	WriteTimeout:      constant.ServerWriteTimeout * time.Second,
-	// disable http2
-	TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
-	*/
 }
 
 // configureGracefulShutdown configures graceful shutdown
