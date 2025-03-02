@@ -29,7 +29,9 @@ func (a *App) initServer() {
 
 // configureGracefulShutdown configures graceful shutdown
 func (a *App) configureGracefulShutdown() {
-	a.srv.ConfigureGracefulShutdown(nil)
+	a.srv.ConfigureGracefulShutdown(func() {
+		
+	})
 }
 
 // Start starts the server
